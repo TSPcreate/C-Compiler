@@ -7,12 +7,13 @@
 - Code generator(Not the greatest code at the moment) turns AST tree to assembly code
 
 
-## Production Rules currently are:
-''' 
+
+Production Rules currently are:
+
+
 program ::= function
 function ::= "int" id "(" ")" "{" statement "}"
 statement ::= "return" exp ";"
 exp ::= unary_op exp | int
 unary_op ::= "!" | "~" | "-"
 
-'''
