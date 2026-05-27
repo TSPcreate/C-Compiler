@@ -1,6 +1,3 @@
-import lexer 
-
-tokens = lexer.lex("return_2.c")
 
 
 '''
@@ -41,10 +38,7 @@ def parse_exp(tokens):
     numbers = '0123456789'
     for i in range(len(tokens)):
         if tokens[i] in "!-~": #Take !4~3 as an example
-            if parse_exp(tokens[i+1:]) is False:
-                return False 
-            else:
-                return UnOp(tokens[i], parse_exp(tokens[i+1:]))
+            return UnOp(tokens[i], parse_exp(tokens[i+1:]))
         elif tokens[i] in numbers: #Issue in program is here
             if len(tokens) == 1:
                 return Const(int(tokens[i]))                
@@ -109,55 +103,8 @@ def parse_program(tokens):
         program = Prog(func)
         return program 
 
-def generate_AST(op):
-    if isinstance(op.operator, str):
-        AST_Tree.append(op.operator)
-        if isinstance(op.exp, Const):
-            AST_Tree.append(op.exp.int)
-        else:
-            return generate_AST(op.exp)
-
-def generate_program(AST_Tree):
-    global code
-    n = len(AST_Tree) - 1
-    if not AST_Tree:
-        code += """
-        ret"""
-        file = open("assembly.s", "w")
-        file.write(code)
-        return True
-    if AST_Tree[n] == "!":
-        code += """
-        cmpl $0, %eax
-        movl $0, %eax 
-        sete %al"""
-        return generate_program(AST_Tree[:n])
-    elif AST_Tree[n] == "-":
-        code += """
-        neg %eax"""
-        return generate_program(AST_Tree[:n])
-    elif AST_Tree[n] == "~":
-        code += """
-        not eax"""
-        return generate_program(AST_Tree[:n]) 
-    
 
 
-program = parse_program(tokens)
-if program is False:
-    print("Invalid Program")
-else:
-    op = program.fun_decl.statement.exp
-    AST_Tree = []
-    generate_AST(op)
-    id = program.fun_decl.id
-    n = len(AST_Tree) - 1
-    code = f"""
-.global {id}
-    {id}:
-        movl ${AST_Tree[n]}, %eax"""
-    AST_Tree = AST_Tree[:n]
-    generate_program(AST_Tree)
 
 
 
