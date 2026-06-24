@@ -1,4 +1,4 @@
-
+import lexer
 
 '''
 Production Rules are:
@@ -6,8 +6,9 @@ Production Rules are:
 <program> ::= <function>
 <function> ::= "int" <id> "(" ")" "{" <statement> "}"
 <statement> ::= "return" <exp> ";"
-<exp> ::= <unary_op> <exp> | <int>
-<unary_op> ::= "!" | "~" | "-"
+<exp> ::= <term> { ("+" | "-") <term> }
+<term> ::= <factor> { ("*" | "/") <factor> }
+<factor> ::= "(" <exp> ")" | <unary_op> <factor> | <int>
 
 '''
 #Expressions defined here
@@ -20,6 +21,10 @@ class UnOp:
         self.operator = operator
         self.exp = exp
 
+class BinOp:
+    def __init__(self, operator, exp):
+        self.operator = operator 
+        self.exp = exp
 #Statement defined
 class Return:
     def __init__(self, exp):
@@ -34,66 +39,58 @@ class Prog:
     def __init__(self, fun_decl):
         self.fun_decl = fun_decl
 
+def factor(tokens):
+    return 
+
+def term(tokens):
+    return 
+
 def parse_exp(tokens):
-    numbers = '0123456789'
-    for i in range(len(tokens)):
-        if tokens[i] in "!-~": #Take !4~3 as an example
-            return UnOp(tokens[i], parse_exp(tokens[i+1:]))
-        elif tokens[i] in numbers: #Issue in program is here
-            if len(tokens) == 1:
-                return Const(int(tokens[i]))                
-            else:
-                return False
-        else:
-            return False
-    return False
+    
+    if tokens.current_token.op == "UNOP":
+        return UnOp(str(tokens.current_token.tok), parse_exp(lexer.Tokens(tokens.list_token[tokens.pointer+1:], 0)))
+    elif tokens.current_token.type == "INTEGER_LITERAL":
+        return Const(int(tokens.current_token.tok))
 
 def parse_statement(tokens):
+    if tokens.current_token.type == "RETURN_KEYWORD":
+        exp = []
+        while tokens.current_token.type != "SEMICOLON" and tokens.current_token is not False:
+            exp.append(tokens.next_token())
+        if tokens.current_token == False:
+            return False 
+        expression = lexer.Tokens(exp, 0)
+        parsed_expression = parse_exp(expression)
+        if parsed_expression == False:
+            return False 
+        else:
+            statement = Return(parsed_expression)
+            return statement
 
-    for i in range(len(tokens)):
-            if tokens[i] == 'return':
-              
-              semi_colon = False 
-              expression = []
-              for j in range(i+1, len(tokens)): #Iterates from 'return' to the end of the statement
-                  if tokens[j] == ';':
-                      semi_colon = True 
-                      break 
-                  else:
-                      expression.append(tokens[j])  #Appends everything until it reaches a semi-colon
-                
-              if semi_colon == False:
-                  return False #No semi-colon found by the end of the iteration, return False
-              else:
-                  exp = parse_exp(expression) #Parse expression
-                  if exp is False: 
-                    return False 
-                  else:
-                    statement = Return(exp)
-                    return statement
-                  
-            return False
-    return False
 
-def parse_function(tokens):  #
-  #Quite strict as of right now 
 
-  if tokens[0] == "int":
-      if tokens[1] == "main":
-          if tokens[2] == "(" and tokens[3] == ")":
-              if tokens[4] == "{":
-                  if "}" in tokens[4:]:
-                      end_pos = tokens.index("}")
-                      statement = []
-                      for i in range(5, end_pos):
-                          statement.append(tokens[i])
+def parse_function(tokens):  
+  if tokens.current_token.type ==  "INT_KEYWORD":
+      if tokens.next_token().type == "IDENTIFIER":
+          id = tokens.current_token.tok
+          if tokens.next_token().type == "OPEN_PARANTHESIS":
+              if tokens.next_token().type == "CLOSE_PARANTHESIS":
+                  if tokens.next_token().type == "OPEN_BRACE":
+                      list = []
+                      while tokens.current_token.type != "CLOSE_BRACE" and tokens.current_token is not False:
+                          tokens.next_token()
+                          list.append(tokens.current_token)
+                      if tokens.current_token.type != "CLOSE_BRACE":
+                          return False
+                      statement = lexer.Tokens(list, 0)
                       parsed_statement = parse_statement(statement)
                       if parsed_statement is False:
-                          return False
-                      else:  
-                        function = Fun("main", parsed_statement)
-                        return function 
-                  
+                          return False 
+                      else:
+                          function = Fun(str(id), parsed_statement)
+                          return function
+
+                
                         
 def parse_program(tokens):
     func = parse_function(tokens)
@@ -102,9 +99,5 @@ def parse_program(tokens):
     else:
         program = Prog(func)
         return program 
-
-
-
-
 
 

@@ -1,12 +1,8 @@
 
-.global main
-    main:
+.global mainthree
+    mainthree:
         movl $4, %eax
         neg %eax
-        neg %eax
-        cmpl $0, %eax
-        movl $0, %eax 
-        sete %al
         cmpl $0, %eax
         movl $0, %eax 
         sete %al
