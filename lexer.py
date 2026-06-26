@@ -14,6 +14,7 @@ class Tokens:
 
 
 
+
 class Token:
     def __init__(self, type, tok, op):
         self.type = type 
@@ -30,7 +31,7 @@ def check_type(token):
     elif token == "-":
         token = Token("MINUS", token, "UNOP")
     elif token == "+":
-        token = Token("ADDITION", token, None)
+        token = Token("ADDITION", token, "BINOP")
     elif token == "{":
         token = Token("OPEN_BRACE", token, None)
     elif token == "}":
@@ -46,9 +47,9 @@ def check_type(token):
     elif token == "~":
         token = Token("BITWISE_COMPLEMENT", token, "UNOP")
     elif token == "*":
-        token = Token("MULTIPLICATION", token, None)
+        token = Token("MULTIPLICATION", token, "BINOP")
     elif token == "/":
-        token = Token("DIVISION", token, None)
+        token = Token("DIVISION", token, "BINOP")
     elif token == "!":
         token = Token("LOGICAL_NEGATION", token, "UNOP")
     return token

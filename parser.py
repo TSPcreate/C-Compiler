@@ -22,9 +22,11 @@ class UnOp:
         self.exp = exp
 
 class BinOp:
-    def __init__(self, operator, exp):
-        self.operator = operator 
-        self.exp = exp
+    def __init__(self, binary_operator, exp1, exp2):
+        self.operator = binary_operator 
+        self.exp1 = exp1 
+        self.exp2 = exp2
+
 #Statement defined
 class Return:
     def __init__(self, exp):
@@ -39,18 +41,74 @@ class Prog:
     def __init__(self, fun_decl):
         self.fun_decl = fun_decl
 
-def factor(tokens):
+def parse_factor(tokens):
     return 
 
-def term(tokens):
+def parse_term(tokens):
     return 
 
 def parse_exp(tokens):
-    
+    '''
     if tokens.current_token.op == "UNOP":
         return UnOp(str(tokens.current_token.tok), parse_exp(lexer.Tokens(tokens.list_token[tokens.pointer+1:], 0)))
     elif tokens.current_token.type == "INTEGER_LITERAL":
         return Const(int(tokens.current_token.tok))
+    '''
+    # Example: 1 + 1 * 2 + 1, should be interpretted is 1 + (1*2) + 1
+    # <exp> ::= <term> { ("+" | "-") <term> } needs to parse expression into this
+    # Since {} notation means a term + or - another, possibly + - another term infinitely we need to reflect this in our code
+    # the 1 + 1*2 + 1 should be interpretted as, term1 + term2 + term3, term1 = 1, term2 = 1 *2, term3 = 1
+    # 1. check for the first BINOP operator, and parse whatever is before it as term1
+    # 2. check between whatever is between the first BINOP and the second BINOP as term2
+    # 3. Create a node, term1 + term2
+    # 4. Repeat but this time, check for the next BINOP operator, parse whatever is before it as term3 and add it to the node (.... + ...) + .... +
+    # Repeat until the end of the tokens
+
+
+    contains_BINOP = False
+    first_node = True
+    current_node = 0
+    while tokens.current_token is not False:
+        if tokens.current_token.type == "ADDITION" and tokens.current_token.type == "MINUS" and first_node == True:
+            contains_BINOP = True
+            first_term = lexer.Tokens(tokens.list_token[:tokens.pointer])
+            current_node = next_node(tokens, first_term)
+        elif tokens.current_token.type == "ADDITION" and tokens.current_token.type == "MINUS" and first_node != True:
+            contains_BINOP = True
+            current_node = next_node(tokens, current_node)
+    if contains_BINOP is False:
+        term = parse_term(tokens)
+        return term 
+    else:
+        return current_node
+
+        
+
+
+#Forms a node by taking in the full tokens, the current_node, checking for the next BINOP operator and then applying the next term to the current term
+def next_node(tokens, current_node):
+    current_BINOP = tokens.current_token.type  
+    term1 = current_node 
+    term2 = []
+    tokens.next_token()
+    while tokens.current_token.type != "ADDITION" and tokens.current_token.type != "MINUS" and tokens.current_token.type is not False:
+        term2.append(tokens.current_token)
+        tokens.next_token()
+    term2 = lexer.Tokens(term2, 0)
+    current_node = BinOp(current_BINOP, term1, term2)
+    return current_node
+
+
+
+
+
+
+
+
+
+            
+        
+    
 
 def parse_statement(tokens):
     if tokens.current_token.type == "RETURN_KEYWORD":
