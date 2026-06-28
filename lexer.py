@@ -1,16 +1,37 @@
 class Tokens:
-    def __init__(self, list_token, pointer):
+    def __init__(self, list_token):
         self.list_token = list_token 
-        self.pointer = int(pointer)
-        self.current_token = list_token[pointer]
-    
+        self.pointer = list_token[0] #Want the pointer to instead point to the current token
+    '''
     def next_token(list_tokens):
-        if list_tokens.pointer < len(list_tokens.list_token)-1:
+        if list_tokens.pointer < len(list_tokens.list_token):
             list_tokens.pointer += 1
             list_tokens.current_token = list_tokens.list_token[list_tokens.pointer]
             return list_tokens.current_token
         else:
             list_tokens.current_token = False
+    '''
+
+    #Advances the list by popping off the token of the list
+    def advance(tokens):
+        list_tok = tokens.list_token
+        if len(list_tok) > 1:
+            list_tok = list_tok[1:]
+            tokens.list_token = list_tok
+            tokens.pointer = tokens.list_token[0]
+        else:
+            tokens.pointer = Token("NONE", None, None)
+
+
+    # Peaks to the next token in the list without consuming that token
+    def peek(tokens):
+        list_tokens = tokens.list_token
+        if len(list_tokens) > 1:
+            return list_tokens[0]
+        else:
+            none = Token("NONE", None, None)
+            return none
+            
 
 
 
@@ -29,7 +50,7 @@ def check_type(token):
     elif token.isalpha() is True:
         token = Token("IDENTIFIER", token, None)
     elif token == "-":
-        token = Token("MINUS", token, "UNOP")
+        token = Token("MINUS", token, "BINOP")
     elif token == "+":
         token = Token("ADDITION", token, "BINOP")
     elif token == "{":
@@ -64,7 +85,7 @@ def lex(filename):
         temp = ""
         for i in range(len(line)):
             if line[i] != ' ' or '':
-                if line[i] in ";}{()-!~":
+                if line[i] in ";}{()-!~+":
                     if temp != "" and temp != " ":
                         list_tokens.append(check_type(temp))
                         temp = ""
@@ -82,7 +103,7 @@ def lex(filename):
                     list_tokens.append(check_type(temp))
                     temp = ""
         line = file.readline()
-    return Tokens(list_tokens, 0)
+    return Tokens(list_tokens)
 
 
 

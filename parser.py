@@ -42,82 +42,65 @@ class Prog:
         self.fun_decl = fun_decl
 
 def parse_factor(tokens):
-    return 
+    #<factor> ::= "(" <exp> ")" | <unary_op> <factor> | <int>
+    if tokens.pointer.type == "OPEN_PARANTHESIS":
+        tokens.advance()
+        exp = parse_exp(tokens)
+        if tokens.pointer.type == "CLOSE_PARANTHESIS":
+            return exp
+        else:
+            return False 
+    elif tokens.pointer.op == "UNOP":
+        unop = tokens.tok 
+        tokens.advance()
+        return UnOp(unop, parse_factor(tokens))
+    elif tokens.pointer.type == "INTEGER_LITERAL":
+        num = Const(int(tokens.pointer.tok))
+        tokens.advance()
+        return num
+    else:
+        return False
+
+    
+     
 
 def parse_term(tokens):
-    return 
+    # <term> ::= <factor> { ("*" | "/") <factor> }
+    term = parse_factor(tokens)
+    next = tokens.peek()
+    while next.type == "MULTIPLICATION" or next.type == "DIVISION":
+        op = next.tok
+        tokens.advance()
+        term2 = parse_factor(tokens)
+        term = BinOp(op, term, term2)
+        next = tokens.peek()
+    return term
 
 def parse_exp(tokens):
-    '''
-    if tokens.current_token.op == "UNOP":
-        return UnOp(str(tokens.current_token.tok), parse_exp(lexer.Tokens(tokens.list_token[tokens.pointer+1:], 0)))
-    elif tokens.current_token.type == "INTEGER_LITERAL":
-        return Const(int(tokens.current_token.tok))
-    '''
-    # Example: 1 + 1 * 2 + 1, should be interpretted is 1 + (1*2) + 1
-    # <exp> ::= <term> { ("+" | "-") <term> } needs to parse expression into this
-    # Since {} notation means a term + or - another, possibly + - another term infinitely we need to reflect this in our code
-    # the 1 + 1*2 + 1 should be interpretted as, term1 + term2 + term3, term1 = 1, term2 = 1 *2, term3 = 1
-    # 1. check for the first BINOP operator, and parse whatever is before it as term1
-    # 2. check between whatever is between the first BINOP and the second BINOP as term2
-    # 3. Create a node, term1 + term2
-    # 4. Repeat but this time, check for the next BINOP operator, parse whatever is before it as term3 and add it to the node (.... + ...) + .... +
-    # Repeat until the end of the tokens
+    # <exp> ::= <term> { ("+" | "-") <term> }
 
-
-    contains_BINOP = False
-    first_node = True
-    current_node = 0
-    while tokens.current_token is not False:
-        if tokens.current_token.type == "ADDITION" and tokens.current_token.type == "MINUS" and first_node == True:
-            contains_BINOP = True
-            first_term = lexer.Tokens(tokens.list_token[:tokens.pointer])
-            current_node = next_node(tokens, first_term)
-        elif tokens.current_token.type == "ADDITION" and tokens.current_token.type == "MINUS" and first_node != True:
-            contains_BINOP = True
-            current_node = next_node(tokens, current_node)
-    if contains_BINOP is False:
-        term = parse_term(tokens)
-        return term 
-    else:
-        return current_node
-
-        
-
-
-#Forms a node by taking in the full tokens, the current_node, checking for the next BINOP operator and then applying the next term to the current term
-def next_node(tokens, current_node):
-    current_BINOP = tokens.current_token.type  
-    term1 = current_node 
-    term2 = []
-    tokens.next_token()
-    while tokens.current_token.type != "ADDITION" and tokens.current_token.type != "MINUS" and tokens.current_token.type is not False:
-        term2.append(tokens.current_token)
-        tokens.next_token()
-    term2 = lexer.Tokens(term2, 0)
-    current_node = BinOp(current_BINOP, term1, term2)
-    return current_node
-
-
-
-
-
-
-
-
-
-            
-        
-    
+    # 1. Parse the first term as given in the defintion of exp
+    # 2. Do a while loop where it continuously parses for the next term when and addition or minus is detected
+    term = parse_term(tokens)
+    next = tokens.peek()
+    while next.type == "ADDITION" or next.type == "MINUS":
+        op = next.tok
+        tokens.advance()
+        term2 = parse_term(tokens)
+        term = BinOp(op, term, term2)
+        next = tokens.peek()
+    return term
 
 def parse_statement(tokens):
-    if tokens.current_token.type == "RETURN_KEYWORD":
+    #<statement> ::= "return" <exp> ";"
+    if tokens.pointer.type == "RETURN_KEYWORD":
         exp = []
-        while tokens.current_token.type != "SEMICOLON" and tokens.current_token is not False:
-            exp.append(tokens.next_token())
-        if tokens.current_token == False:
+        while tokens.pointer.type != "SEMICOLON" and tokens.pointer.type != "NONE":
+            tokens.advance()
+            exp.append(tokens.pointer)
+        if tokens.pointer == False:
             return False 
-        expression = lexer.Tokens(exp, 0)
+        expression = lexer.Tokens(exp)
         parsed_expression = parse_exp(expression)
         if parsed_expression == False:
             return False 
@@ -128,19 +111,24 @@ def parse_statement(tokens):
 
 
 def parse_function(tokens):  
-  if tokens.current_token.type ==  "INT_KEYWORD":
-      if tokens.next_token().type == "IDENTIFIER":
-          id = tokens.current_token.tok
-          if tokens.next_token().type == "OPEN_PARANTHESIS":
-              if tokens.next_token().type == "CLOSE_PARANTHESIS":
-                  if tokens.next_token().type == "OPEN_BRACE":
+  #<function> ::= "int" <id> "(" ")" "{" <statement> "}"
+  if tokens.pointer.type ==  "INT_KEYWORD":
+      tokens.advance()
+      if tokens.pointer.type == "IDENTIFIER":
+          id = tokens.pointer.tok
+          tokens.advance()
+          if tokens.pointer.type == "OPEN_PARANTHESIS":
+              tokens.advance()
+              if tokens.pointer.type == "CLOSE_PARANTHESIS":
+                  tokens.advance()
+                  if tokens.pointer.type == "OPEN_BRACE":
                       list = []
-                      while tokens.current_token.type != "CLOSE_BRACE" and tokens.current_token is not False:
-                          tokens.next_token()
-                          list.append(tokens.current_token)
-                      if tokens.current_token.type != "CLOSE_BRACE":
+                      while tokens.pointer.type != "CLOSE_BRACE" and tokens.pointer.type != "NONE":
+                          tokens.advance()
+                          list.append(tokens.pointer)
+                      if tokens.pointer.type != "CLOSE_BRACE":
                           return False
-                      statement = lexer.Tokens(list, 0)
+                      statement = lexer.Tokens(list)
                       parsed_statement = parse_statement(statement)
                       if parsed_statement is False:
                           return False 
