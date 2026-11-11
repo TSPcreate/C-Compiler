@@ -1,4 +1,4 @@
-# Building a C compiler from scratch using Nora Sandler's guide
+# Building a compiler for a subset of C
 
 ## Current Implemetation:
 
